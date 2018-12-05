@@ -24,7 +24,8 @@ import tensorflow as tf
 
 class MultiSentimentAttentionModle():
 
-    def __init__(self, input_shape, settings):
+    def __init__(self, input_shape, settings, rnn_unit=100, epochs=100,
+                 bathch_size=256):
         # 模型名称
         self.name = 'Multi-Sentiment-Attention'
         # 输入的形状
@@ -46,11 +47,11 @@ class MultiSentimentAttentionModle():
 
         # ----------------超参数的设置---------------------
         # 训练迭代次数
-        self.epochs = 500
+        self.epochs = epochs
         # 训练批次
-        self.batch_size = 32
+        self.batch_size = bathch_size
         # RNN的单元数
-        self.rnn_units = 100
+        self.rnn_units = rnn_unit
         # 注意力的维度
         self.da = 350
         # 注意力的行数
