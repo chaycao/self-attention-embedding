@@ -20,15 +20,19 @@ train_shape = dataset.get_train_shape()
 
 # -------------------2.开始训练----------------------------------------------
 
-# selfAttentiveEmbeddingModel = SelfAttentiveEmbeddingModel(train_shape, settings, batch_size=64, epochs=2)
-# selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
-# blstmModle = BLSTM(train_shape, settings, batch_size=64, epochs=1)
+# blstmModle = BLSTM(train_shape, settings, batch_size=256, epochs=100)
 # blstmModle.start(x_train, y_train, x_val, y_val, x_test, y_test)
+#
+# bgruModel = BGRU(train_shape, settings, batch_size=256, epochs=100)
+# bgruModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
-bgruModel = BGRU(train_shape, settings, batch_size=64, epochs=1)
-bgruModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
+selfAttentiveEmbeddingModel = \
+    SelfAttentiveEmbeddingModel(train_shape, settings,
+                                batch_size=256, epochs=100, use_regularizer=False,
+                                patience=5, rnn_units=100)
+selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
 
 # multiSentimentAttentionModle = MultiSentimentAttentionModle(train_shape, settings)

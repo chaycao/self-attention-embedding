@@ -1,7 +1,7 @@
 from keras import Input
 from keras.models import Sequential, load_model, Model
 from keras.layers import Dense, Bidirectional, GRU, Embedding, LSTM, Flatten, \
-    Lambda, Dropout
+    Lambda, Dropout, concatenate
 
 from draw import draw_history
 from metrics import recall, precision, f1
@@ -26,7 +26,8 @@ class SelfAttentiveEmbeddingModel():
 
     def __init__(self, input_shape, settings,
                  epochs=100, batch_size=256, rnn_units=100,
-                 da=350, r=30, use_regularizer=True, patience=10):
+                 da=350, r=30, use_regularizer=True, patience=10,
+                 word_da=350, word_r=30,):
         # 模型名称
         self.name = "Self-Attentive-Embedding"
         # 输入形状
@@ -56,6 +57,10 @@ class SelfAttentiveEmbeddingModel():
         self.use_regularizer = use_regularizer
         # early_stopping的等待次数
         self.patience = patience
+        # 词向量自注意力的维度
+        self.word_da = word_da
+        # 词向量自注意力的行数
+        self.word_r = word_r
 
     def model_infor(self):
         infor = ''
@@ -100,6 +105,16 @@ class SelfAttentiveEmbeddingModel():
                                    use_regularizer=self.use_regularizer)(H)
         M = Batch_Dot(Y=H)(A)
         M = Flatten()(M)
+
+        # 词向量注意力
+        A_wordvec = SelfAttentiveEmbedding(da=self.word_da, r=self.word_r,
+                                   use_regularizer=self.use_regularizer)(wordvec)
+        M_wordvec = Batch_Dot(Y=wordvec)(A_wordvec)
+        M_wordvec = Flatten()(M_wordvec)
+
+        # 联合词向量注意力和自注意力
+        M = concatenate([M, M_wordvec])
+
         predictions = Dense(1, activation='sigmoid')(M)
         self.model = Model(inputs=inputs, outputs=predictions)
         self.model.layers[1].set_weights([embedding_matrix])

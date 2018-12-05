@@ -11,5 +11,5 @@ def self_attentive_reg(A):
     x = K.batch_dot(A, tf.transpose(A, [0,2,1]))
     x = x-1
     x = tf.norm(x)
-    x = 0.00001*x*x
+    x = 0.0001*x*x
     return x

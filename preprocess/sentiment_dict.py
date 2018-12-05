@@ -42,15 +42,42 @@ def sequence(data_path, dict_path, output_path):
     with codecs.open(output_path, 'wb') as file:
         pickle.dump(list, file)
 
+def load_word_index(path):
+    with codecs.open(path, 'rb') as f:
+        return pickle.load(f)
+
+def sequence_with_wordindex(word_index_path, dict_path, output_path):
+    word_index = load_word_index('../data/douban/word_index.pkl')
+    print(len(word_index))
+    list = []
+    with codecs.open(dict_path, 'r', 'utf-8') as file:
+        for line in file:
+            word = line.strip()
+            if word in word_index:
+                list.append(word_index[word])
+                # print(word)
+    print(len(list))
+    with codecs.open(output_path, 'wb') as file:
+        pickle.dump(list, file)
 
 if __name__ == '__main__':
+    word_index_path = '../data/douban/word_index.pkl'
+    sequence_with_wordindex(word_index_path,
+                            dict_path='../data/dict/sentiment/sentiment_merge.txt',
+                            output_path='../data/douban/dict/sentiment.data')
+    sequence_with_wordindex(word_index_path,
+                            dict_path='../data/dict/intensity-word/程度级别词语（中文）.txt',
+                            output_path='../data/douban/dict/intensity.data')
+    sequence_with_wordindex(word_index_path,
+                            dict_path='../data/dict/negative-word/否定.txt',
+                            output_path='../data/douban/dict/negative.data')
     # merge('../data/dict/sentiment', '../data/dict/sentiment/sentiment_merge.txt')
-    sequence(data_path='../data/ChnSentiCorp.txt',
-             # dict_path='../data/dict/sentiment/sentiment_merge.txt',
-             # dict_path='../data/dict/intensity-word/程度级别词语（中文）.txt',
-             dict_path='../data/dict/negative-word/否定.txt',
-             # output_path='../data/dict/sentiment.data'
-             # output_path='../data/dict/intensity.data'
-             output_path='../data/dict/negative.data'
-             )
+    # sequence(data_path='../data/ChnSentiCorp.txt',
+    #          # dict_path='../data/dict/sentiment/sentiment_merge.txt',
+    #          # dict_path='../data/dict/intensity-word/程度级别词语（中文）.txt',
+    #          dict_path='../data/dict/negative-word/否定.txt',
+    #          # output_path='../data/dict/sentiment.data'
+    #          # output_path='../data/dict/intensity.data'
+    #          output_path='../data/dict/negative.data'
+    #          )
 
