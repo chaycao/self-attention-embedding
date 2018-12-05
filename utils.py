@@ -42,7 +42,7 @@ def print_metrics(metrics, metrice_name):
     '''
     metrics_log = '==========测试集结果==========\n'
     for i, metric in enumerate(metrics):
-        metrics_log += metrice_name[i] + ": " + str(metric) + '\n'
+        metrics_log += "%s:%.2f\n" % (metrice_name[i], metric*100)
     print(metrics_log)
     return metrics_log
 
