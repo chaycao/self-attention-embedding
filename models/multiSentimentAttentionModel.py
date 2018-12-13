@@ -126,18 +126,14 @@ class MultiSentimentAttentionModle():
         Xc = Merge(Xs, Xi)(Xn) # (None, t, d)
 
         #
-        Xcs = transpose_3D_layer(Xcs) # (None, m, d)
-        Xci = transpose_3D_layer(Xci) # (None, k, d)
-        Xcn = transpose_3D_layer(Xcn) # (None, p, d)
+        # Xcs = transpose_3D_layer(Xcs) # (None, m, d)
+        # Xci = transpose_3D_layer(Xci) # (None, k, d)
+        # Xcn = transpose_3D_layer(Xcn) # (None, p, d)
 
-        Hc = Bidirectional(GRU(units=self.rnn_units, return_sequences=True),
-                          merge_mode='concat')(Xc) # (None, t, rnn_unit)
-        Hs = Bidirectional(GRU(units=self.rnn_units, return_sequences=True),
-                          merge_mode='concat')(Xcs) # (None, m, rnn_unit)
-        Hi = Bidirectional(GRU(units=self.rnn_units, return_sequences=True),
-                          merge_mode='concat')(Xci) # (None, k, rnn_unit)
-        Hn = Bidirectional(GRU(units=self.rnn_units, return_sequences=True),
-                          merge_mode='concat')(Xcn) # (None, p, rnn_unit)
+        Hc = GRU(units=self.rnn_units, return_sequences=True)(Xc) # (None, t, rnn_unit)
+        Hs = GRU(units=self.rnn_units, return_sequences=True)(Xcs) # (None, d, rnn_unit)
+        Hi = GRU(units=self.rnn_units, return_sequences=True)(Xci) # (None, d, rnn_unit)
+        Hn = GRU(units=self.rnn_units, return_sequences=True)(Xcn) # (None, d, rnn_unit)
 
         a1 = MultiSentimentAttention(Hc, da=self.da, r=self.r, t=self.t)(Hs) # (None, r, t)
         a2 = MultiSentimentAttention(Hc, da=self.da, r=self.r, t=self.t)(Hi) # (None, r, t)

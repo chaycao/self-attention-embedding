@@ -50,6 +50,6 @@ def shuffle_data(input_path, output_path):
 
 
 if __name__ == '__main__':
-    shuffle_data_input_path = '../data/douban/sequences(1w).txt'
-    shuffle_data_output_path = '../data/douban/sequences(1w)_shuffle.txt'
+    shuffle_data_input_path = '../data/douban/sequences(25w).txt'
+    shuffle_data_output_path = '../data/douban/sequences(25w)_shuffle.txt'
     shuffle_data(shuffle_data_input_path, shuffle_data_output_path)

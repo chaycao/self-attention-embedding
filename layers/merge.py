@@ -16,7 +16,7 @@ class Merge(Layer):
         super(Merge, self).build(input_shape)
 
     def call(self, C):
-        return self.A + self.B + C
+        return (self.A + self.B + C)
 
     def compute_output_shape(self, input_shape):
         return input_shape

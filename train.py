@@ -1,5 +1,6 @@
 from models.blstmModel import BLSTM
 from models.multiSentimentAttentionModel import MultiSentimentAttentionModle
+from models.sentimentAttentionModel import SentimentAttentionModel
 from settings import Settings
 from dataset import Dataset
 from models.bgruModel import BGRU
@@ -28,12 +29,16 @@ train_shape = dataset.get_train_shape()
 # bgruModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
 
-selfAttentiveEmbeddingModel = \
-    SelfAttentiveEmbeddingModel(train_shape, settings,
-                                batch_size=256, epochs=100, use_regularizer=False,
-                                patience=5, rnn_units=100)
-selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
+# selfAttentiveEmbeddingModel = \
+#     SelfAttentiveEmbeddingModel(train_shape, settings,
+#                                 batch_size=256, epochs=100, use_regularizer=False,
+#                                 patience=5, rnn_units=100)
+# selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
+# sentimentAttentionModel = SentimentAttentionModel(train_shape, settings,
+#                                 batch_size=256, epochs=100, use_regularizer=False,
+#                                 patience=5, rnn_units=100)
+# sentimentAttentionModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
-# multiSentimentAttentionModle = MultiSentimentAttentionModle(train_shape, settings)
-# multiSentimentAttentionModle.start(x_train, y_train, x_val, y_val, x_test, y_test)
+multiSentimentAttentionModle = MultiSentimentAttentionModle(train_shape, settings)
+multiSentimentAttentionModle.start(x_train, y_train, x_val, y_val, x_test, y_test)
