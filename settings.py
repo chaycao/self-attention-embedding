@@ -5,10 +5,10 @@ class Settings():
         # ----------------1. 数据集设置------------------------------------------
         # 小数据集的设置
         self.isUseSmall = False
-        self.small_data_path = 'data/sequences(100)_shuffle.txt'
+        self.small_data_path = 'data/douban/sequences(100)_shuffle.txt'
 
         # 常规数据集的设置
-        self.data_path = 'data/douban/sequences(1w)_shuffle.txt'
+        self.data_path = 'data/douban/sequences(25w)_shuffle.txt'
 
         # 训练集、验证集、测试集的占比
         self.train_data_factor = 0.6

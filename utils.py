@@ -30,8 +30,12 @@ def best_model_file(path):
     '''
     files = os.listdir(path)
     files = [x for x in files if os.path.splitext(x)[1]=='.h5']
-    # files = filter(lambda x: os.path.splitext(x)[1]=='.h5', files)
+    files.sort()
     return files[-1]
+
+def list_model(path):
+    return os.listdir(path)
+
 
 def print_metrics(metrics, metrice_name):
     '''
@@ -40,7 +44,7 @@ def print_metrics(metrics, metrice_name):
     :param name: 指标的名字
     :return:
     '''
-    metrics_log = '==========测试集结果==========\n'
+    metrics_log = ''
     for i, metric in enumerate(metrics):
         metrics_log += "%s:%.2f\n" % (metrice_name[i], metric*100)
     print(metrics_log)

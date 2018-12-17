@@ -63,15 +63,17 @@ def sequence_with_wordindex(word_index_path, dict_path, output_path):
 if __name__ == '__main__':
     word_index_path = '../data/douban/word_index.pkl'
     sequence_with_wordindex(word_index_path,
-                            dict_path='../data/dict/sentiment/sentiment_merge.txt',
+                            dict_path='../data/douban/dict/sentiment/sentiment_merge.txt',
                             output_path='../data/douban/dict/sentiment.data')
-    sequence_with_wordindex(word_index_path,
-                            dict_path='../data/dict/intensity-word/程度级别词语（中文）.txt',
-                            output_path='../data/douban/dict/intensity.data')
-    sequence_with_wordindex(word_index_path,
-                            dict_path='../data/dict/negative-word/否定.txt',
-                            output_path='../data/douban/dict/negative.data')
-    # merge('../data/dict/sentiment', '../data/dict/sentiment/sentiment_merge.txt')
+    # sequence_with_wordindex(word_index_path,
+    #                         dict_path='../data/dict/intensity-word/程度级别词语（中文）.txt',
+    #                         output_path='../data/douban/dict/intensity.data')
+    # sequence_with_wordindex(word_index_path,
+    #                         dict_path='../data/dict/negative-word/否定.txt',
+    #                         output_path='../data/douban/dict/negative.data')
+
+
+    # merge('../data/douban/dict/sentiment', '../data/douban/dict/sentiment/sentiment_merge.txt')
     # sequence(data_path='../data/ChnSentiCorp.txt',
     #          # dict_path='../data/dict/sentiment/sentiment_merge.txt',
     #          # dict_path='../data/dict/intensity-word/程度级别词语（中文）.txt',

@@ -12,7 +12,7 @@ from layers.batch_dot import Batch_Dot
 from layers.merge import Merge
 from layers.multiSentimentAttention import MultiSentimentAttention
 from metrics import precision, recall, f1
-from utils import mkdir, best_model_file, print_metrics, save_to_file
+from utils import mkdir, best_model_file, print_metrics, save_to_file, list_model
 import pickle
 import codecs
 import keras.backend as K
@@ -24,7 +24,7 @@ import tensorflow as tf
 
 class MultiSentimentAttentionModle():
 
-    def __init__(self, input_shape, settings, rnn_unit=100, epochs=100,
+    def __init__(self, input_shape, settings, rnn_unit=100, epochs=1000,
                  bathch_size=256):
         # 模型名称
         self.name = 'Multi-Sentiment-Attention'
@@ -55,7 +55,7 @@ class MultiSentimentAttentionModle():
         # 注意力的维度
         self.da = 350
         # 注意力的行数
-        self.r = 1
+        self.r = 30
         # 时间步
         self.t = input_shape[1]
 
@@ -70,7 +70,7 @@ class MultiSentimentAttentionModle():
         )
 
     def early_stoping(self):
-        return EarlyStopping(monitor='val_loss', patience=20)
+        return EarlyStopping(monitor='val_loss', patience=10)
 
     def csv_logger(self):
         return CSVLogger(filename=self.result_path + 'training.log')
@@ -124,11 +124,6 @@ class MultiSentimentAttentionModle():
 
         # 最终增强上下文为
         Xc = Merge(Xs, Xi)(Xn) # (None, t, d)
-
-        #
-        # Xcs = transpose_3D_layer(Xcs) # (None, m, d)
-        # Xci = transpose_3D_layer(Xci) # (None, k, d)
-        # Xcn = transpose_3D_layer(Xcn) # (None, p, d)
 
         Hc = GRU(units=self.rnn_units, return_sequences=True)(Xc) # (None, t, rnn_unit)
         Hs = GRU(units=self.rnn_units, return_sequences=True)(Xcs) # (None, d, rnn_unit)
@@ -205,3 +200,19 @@ class MultiSentimentAttentionModle():
         history = self.fit(x_train, y_train, x_val, y_val)
         draw_history(history, self.result_path)
         self.evaluate(x_test, y_test)
+
+    def evaluate_all(self, x_test, y_test, result_path):
+        self.build()
+        self.compile()
+        model_names = list_model(result_path)
+        for model_name in model_names:
+            self.model.load_weights(result_path+model_name)
+            test_metrics = self.model.evaluate(x_test, y_test)
+            predict_log = print_metrics(test_metrics, self.model.metrics_names)
+
+    def evaluate_single(self, x_test, y_test, model_path):
+        self.build()
+        self.compile()
+        self.model.load_weights(model_path)
+        test_metrics = self.model.evaluate(x_test, y_test)
+        print_metrics(test_metrics, self.model.metrics_names)

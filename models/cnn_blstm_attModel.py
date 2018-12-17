@@ -1,7 +1,7 @@
 from keras import Input
 from keras.models import Sequential, load_model, Model
 from keras.layers import Dense, Bidirectional, GRU, Embedding, LSTM, Flatten, \
-    Lambda, Dropout, concatenate
+    Lambda, Dropout, concatenate, Conv1D, MaxPooling1D, Masking
 
 from draw import draw_history
 from metrics import recall, precision, f1
@@ -13,23 +13,14 @@ from layers.selfAttentiveEmbedding import SelfAttentiveEmbedding
 from layers.batch_dot import Batch_Dot
 from keras import backend as K
 
-class SelfAttentiveEmbeddingModel():
-    """双向BGRU网络
-    构建模型
 
-    Embedding()
-    BLSTM()
-    Self-attentive-embedding()
-    Flatten()
-    Dense()
-    """
-
+class CnnBlstmAttModel():
     def __init__(self, input_shape, settings,
                  epochs=100, batch_size=256, rnn_units=100,
                  da=350, r=30, use_regularizer=True, patience=10,
                  word_da=350, word_r=30, useWordvecAtt=False):
         # 模型名称
-        self.name = "Self-Attentive-Embedding"
+        self.name = "CNN-BLSTM-Att"
         # 输入形状
         self.input_shape = input_shape
         # 创建模型的时间
@@ -42,7 +33,7 @@ class SelfAttentiveEmbeddingModel():
         # 模型的Embedding_matrix位置
         self.embedding_matrix_path = settings.embedding_matrix_path
 
-        #----------------超参数的设置---------------------
+        # ----------------超参数的设置---------------------
         # 训练迭代次数
         self.epochs = epochs
         # 训练批次
@@ -99,10 +90,12 @@ class SelfAttentiveEmbeddingModel():
         embedding_matrix = self.load_embedding_matrix()
         wordvec = Embedding(input_dim=embedding_matrix.shape[0],
                             output_dim=embedding_matrix.shape[1],
-                            mask_zero=True,
                             )(inputs)
+        convec = Conv1D(32, 5, activation='relu')(wordvec)
+        convec = MaxPooling1D(3)(convec)
+        convec = Conv1D(32, 5, activation='relu')(convec)
         H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
-                          merge_mode='concat')(wordvec)
+                          merge_mode='concat')(convec)
         A = SelfAttentiveEmbedding(da=self.da, r=self.r,
                                    use_regularizer=self.use_regularizer)(H)
         M = Batch_Dot(Y=H)(A)
@@ -111,7 +104,7 @@ class SelfAttentiveEmbeddingModel():
         if self.useWordvecAtt == True:
             # 词向量注意力
             A_wordvec = SelfAttentiveEmbedding(da=self.word_da, r=self.word_r,
-                                       use_regularizer=self.use_regularizer)(wordvec)
+                                               use_regularizer=self.use_regularizer)(wordvec)
             M_wordvec = Batch_Dot(Y=wordvec)(A_wordvec)
             M_wordvec = Flatten()(M_wordvec)
             # 联合词向量注意力和自注意力
@@ -125,7 +118,7 @@ class SelfAttentiveEmbeddingModel():
 
     def compile(self):
         self.model.compile(loss="binary_crossentropy", optimizer='adam',
-                      metrics=[precision, recall, f1])
+                           metrics=[precision, recall, f1])
 
     def fit(self, x_train, y_train, x_val, y_val):
         """
@@ -153,12 +146,11 @@ class SelfAttentiveEmbeddingModel():
         :return:
         """
         best_model_name = best_model_file(self.result_path)
-        self.model.load_weights(self.result_path+best_model_name)
+        self.model.load_weights(self.result_path + best_model_name)
         test_metrics = self.model.evaluate(x_test, y_test)
         predict_log = print_metrics(test_metrics, self.model.metrics_names)
         model_infor = self.model_infor()
-        save_to_file(self.result_path+'predict.log', model_infor+predict_log)
-
+        save_to_file(self.result_path + 'predict.log', model_infor + predict_log)
 
     def start(self, x_train, y_train, x_val, y_val, x_test, y_test):
         '''
@@ -186,7 +178,8 @@ class SelfAttentiveEmbeddingModel():
         #     test_metrics = self.model.evaluate(x_test, y_test)
         #     predict_log = print_metrics(test_metrics, self.model.metrics_names)
         #     print(model_name+'\n'+predict_log+'\n\n')
-        self.model.load_weights('result/Self-Attentive-Embedding-2018-12-14 20-23-25/Self-Attentive-Embedding.06-0.29.h5')
+        self.model.load_weights(
+            'result/Self-Attentive-Embedding-2018-12-14 20-23-25/Self-Attentive-Embedding.06-0.29.h5')
         test_metrics = self.model.evaluate(x_test, y_test)
         predict_log = print_metrics(test_metrics, self.model.metrics_names)
         print(predict_log + '\n\n')
