@@ -113,7 +113,6 @@ class MultiSentimentAttentionModle():
         Mi = Dot(Wi)(Wc_T)  # (None, t, d)*(d, k) = (None, t, k)
         Mn = Dot(Wn)(Wc_T)  # (None, t, d)*(d, p) = (None, t, p)
 
-        #
         Xcs = Batch_Dot(Ms)(Wc) # (None, d, t)*(None, t, m)=(None, d, m)
         Xci = Batch_Dot(Mi)(Wc)  # (None, d, t)*(None, t, k)=(None, d, k)
         Xcn = Batch_Dot(Mn)(Wc)  # (None, d, t)*(None, t, p)=(None, d, p)
@@ -122,17 +121,21 @@ class MultiSentimentAttentionModle():
         Xi = Dot(Wi_T)(Mi)  # (None, t, k)*(k, d)=(None, t, d)
         Xn = Dot(Wn_T)(Mn)  # (None, t, n)*(n, d)=(None, t, d)
 
+        Xs = transpose_3D_layer(Xs)
+        Xi = transpose_3D_layer(Xi)
+        Xn = transpose_3D_layer(Xn)
+
         # 最终增强上下文为
-        Xc = Merge(Xs, Xi)(Xn) # (None, t, d)
+        Xc = concatenate([Xcs, Xci, Xcn])
 
-        Hc = GRU(units=self.rnn_units, return_sequences=True)(Xc) # (None, t, rnn_unit)
-        Hs = GRU(units=self.rnn_units, return_sequences=True)(Xcs) # (None, d, rnn_unit)
-        Hi = GRU(units=self.rnn_units, return_sequences=True)(Xci) # (None, d, rnn_unit)
-        Hn = GRU(units=self.rnn_units, return_sequences=True)(Xcn) # (None, d, rnn_unit)
+        Hc = GRU(units=self.rnn_units, return_sequences=True)(Xc) # (None, d, rnn_unit)
+        Hs = GRU(units=self.rnn_units, return_sequences=True)(Xs) # (None, d, rnn_unit)
+        Hi = GRU(units=self.rnn_units, return_sequences=True)(Xi) # (None, d, rnn_unit)
+        Hn = GRU(units=self.rnn_units, return_sequences=True)(Xn) # (None, d, rnn_unit)
 
-        a1 = MultiSentimentAttention(Hc, da=self.da, r=self.r, t=self.t)(Hs) # (None, r, t)
-        a2 = MultiSentimentAttention(Hc, da=self.da, r=self.r, t=self.t)(Hi) # (None, r, t)
-        a3 = MultiSentimentAttention(Hc, da=self.da, r=self.r, t=self.t)(Hn) # (None, r, t)
+        a1 = MultiSentimentAttention(Hc, da=self.da, r=self.r, d=200)(Hs) # (None, r, t)
+        a2 = MultiSentimentAttention(Hc, da=self.da, r=self.r, d=200)(Hi) # (None, r, t)
+        a3 = MultiSentimentAttention(Hc, da=self.da, r=self.r, d=200)(Hn) # (None, r, t)
 
         o1 = Batch_Dot(Hc)(a1) # (None, r, rnn_unit)
         o1 = Flatten()(o1)
