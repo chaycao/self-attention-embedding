@@ -8,7 +8,7 @@ class Settings():
         self.small_data_path = 'data/douban/sequences(100)_shuffle.txt'
 
         # 常规数据集的设置
-        self.data_path = 'data/douban/sequences(25w)_shuffle.txt'
+        self.data_path = 'data/douban/sequences(1w)_shuffle.txt'
 
         # 训练集、验证集、测试集的占比
         self.train_data_factor = 0.6
@@ -19,7 +19,8 @@ class Settings():
         self.result_path = 'result/'
 
         # Embedding层的权重矩阵
-        self.embedding_matrix_path = 'data/douban/embedding_matrix.npy'
+        # self.embedding_matrix_path = 'data/douban/word2vec/embedding_matrix.npy'
+        self.embedding_matrix_path = 'data/douban/word2vec/embedding_matrix_refine_0.5_0.5.npy'
 
         # 情感词的存放文件
         self.sentiment_path = 'data/douban/dict/sentiment.data'

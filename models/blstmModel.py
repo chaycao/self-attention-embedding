@@ -27,14 +27,20 @@ class BLSTM():
             period=1,
             save_weights_only=True
         )
-        self.early_stoping = EarlyStopping(monitor='val_loss', patience=5)
+        self.early_stoping = EarlyStopping(monitor='val_loss', patience=3)
         self.csv_logger = CSVLogger(
             filename=self.result_path + 'training.log')
         self.model = None
+        self.settings = settings
         self.embedding_matrix = np.load(settings.embedding_matrix_path)
         self.batch_size = batch_size
         self.epochs = epochs
         self.rnn_units = rnn_units
+
+    def model_infor(self):
+        infor = ''
+        infor += 'embedding_matrix_path=' + str(self.settings.embedding_matrix_path) + '\n'
+        return infor
 
     def build(self):
         """
@@ -55,7 +61,7 @@ class BLSTM():
                       metrics=[precision, recall, f1])
         print(model.summary())
         model.layers[0].set_weights([self.embedding_matrix])
-        model.layers[0].trainable = False
+        model.layers[0].trainable = True
         self.model = model
         return self
 
@@ -88,7 +94,8 @@ class BLSTM():
         self.model.load_weights(self.result_path+best_model_name)
         test_metrics = self.model.evaluate(x_test, y_test)
         predict_log = print_metrics(test_metrics, self.model.metrics_names)
-        save_to_file(self.result_path+'predict.log', predict_log)
+        model_infor = self.model_infor()
+        save_to_file(self.result_path+'predict.log', model_infor+predict_log)
 
     def compile(self):
         self.model.compile(loss="binary_crossentropy", optimizer='adam',

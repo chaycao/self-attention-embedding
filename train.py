@@ -23,34 +23,34 @@ train_shape = dataset.get_train_shape()
 # -------------------2.开始训练----------------------------------------------
 
 
-# blstmModle = BLSTM(train_shape, settings, batch_size=256, epochs=100)
-# blstmModle.start(x_train, y_train, x_val, y_val, x_test, y_test)
+blstmModle = BLSTM(train_shape, settings, batch_size=256, epochs=100)
+blstmModle.start(x_train, y_train, x_val, y_val, x_test, y_test)
 #
 # bgruModel = BGRU(train_shape, settings, batch_size=256, epochs=100)
 # bgruModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
 
-selfAttentiveEmbeddingModel = \
-    SelfAttentiveEmbeddingModel(train_shape, settings,
-                                batch_size=256, epochs=100, use_regularizer=False,
-                                patience=10, rnn_units=100, useWordvecAtt=False)
-selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
-
-selfAttentiveEmbeddingModel = \
-    SelfAttentiveEmbeddingModel(train_shape, settings,
-                                batch_size=256, epochs=100, use_regularizer=False,
-                                patience=10, rnn_units=100, useWordvecAtt=True)
-selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
-
-cnnBlstmAttModel = CnnBlstmAttModel(train_shape, settings,
-                                batch_size=256, epochs=100, use_regularizer=False,
-                                patience=10, rnn_units=100, useWordvecAtt=False)
-cnnBlstmAttModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
-
-cnnBlstmAttModel = CnnBlstmAttModel(train_shape, settings,
-                                batch_size=256, epochs=100, use_regularizer=False,
-                                patience=10, rnn_units=100, useWordvecAtt=True)
-cnnBlstmAttModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
+# selfAttentiveEmbeddingModel = \
+#     SelfAttentiveEmbeddingModel(train_shape, settings,
+#                                 batch_size=256, epochs=100, use_regularizer=False,
+#                                 patience=10, rnn_units=100, useWordvecAtt=False)
+# selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
+#
+# selfAttentiveEmbeddingModel = \
+#     SelfAttentiveEmbeddingModel(train_shape, settings,
+#                                 batch_size=256, epochs=100, use_regularizer=False,
+#                                 patience=10, rnn_units=100, useWordvecAtt=True)
+# selfAttentiveEmbeddingModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
+#
+# cnnBlstmAttModel = CnnBlstmAttModel(train_shape, settings,
+#                                 batch_size=256, epochs=100, use_regularizer=False,
+#                                 patience=10, rnn_units=100, useWordvecAtt=False)
+# cnnBlstmAttModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
+#
+# cnnBlstmAttModel = CnnBlstmAttModel(train_shape, settings,
+#                                 batch_size=256, epochs=100, use_regularizer=False,
+#                                 patience=10, rnn_units=100, useWordvecAtt=True)
+# cnnBlstmAttModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
 
 # selfAttentiveEmbeddingModel.evaluate_all(x_test, y_test, 'result/Self-Attentive-Embedding-2018-12-14 20-23-25/')
 # selfAttentiveEmbeddingModel.evaluate_single(x_test, y_test,
