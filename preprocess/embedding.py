@@ -1,3 +1,5 @@
+import pickle
+
 from preprocess.data import load_data
 from keras.preprocessing.text import Tokenizer
 import codecs
@@ -20,7 +22,7 @@ def data_to_sequence(data):
 
 def save_embedding_matrix(wordvec_path, word_index, embedding_matrix_path):
     max_words = len(word_index)
-    embedding_dim = 200
+    embedding_dim = 300
     embedding_matrix = np.zeros((max_words+1, embedding_dim))
     count = 0
     with codecs.open(wordvec_path, 'r', 'utf-8') as wordvec:
@@ -35,6 +37,7 @@ def save_embedding_matrix(wordvec_path, word_index, embedding_matrix_path):
             try:
                 vec = np.asarray(values[1:], dtype='float32')
             except ValueError:
+                print("error:"+word)
                 continue
             if word in word_index:
                 index = word_index[word]
@@ -64,9 +67,16 @@ def generate_embedding_matrix(data_path, wordvec_path, sequences_path,
     # 保存单词序列
     save_sequences(sequences, labels, sequences_path)
 
+def load_word_index(path):
+    with codecs.open(path, 'rb') as f:
+        return pickle.load(f)
+
 if __name__ == '__main__':
     data_path = '../data/douban/douban.data'
-    wordvec_path = 'E:\学习资料\Tencent_AILab_ChineseEmbedding\Tencent_AILab_ChineseEmbedding.txt'
-    sequences_path = '../data/douban/sequences.txt'
-    embedding_matrix_path = '../data/douban/embedding_matrix.npy'
-    generate_embedding_matrix(data_path, wordvec_path, sequences_path, embedding_matrix_path)
+    wordvec_path = 'E:\学习资料\预训练词向量\sgns.merge.word\sgns.merge.word'
+    sequences_path = '../data/douban/word2vec/sequences.txt'
+    embedding_matrix_path = '../data/douban/word2vec/embedding_matrix.npy'
+    # generate_embedding_matrix(data_path, wordvec_path, sequences_path, embedding_matrix_path)
+
+    word_index = load_word_index('../data/douban/word_index.pkl')
+    save_embedding_matrix(wordvec_path, word_index, embedding_matrix_path)
