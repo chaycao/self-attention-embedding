@@ -22,9 +22,11 @@ train_shape = dataset.get_train_shape()
 
 # -------------------2.开始训练----------------------------------------------
 
-
+settings.embedding_matrix_path='data/douban/experiment_data/embedding/embedding_matrix_word2vec_100.npy'
 blstmModle = BLSTM(train_shape, settings, batch_size=256, epochs=100)
 blstmModle.start(x_train, y_train, x_val, y_val, x_test, y_test)
+
+
 #
 # bgruModel = BGRU(train_shape, settings, batch_size=256, epochs=100)
 # bgruModel.start(x_train, y_train, x_val, y_val, x_test, y_test)
