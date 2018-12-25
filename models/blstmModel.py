@@ -36,10 +36,12 @@ class BLSTM():
         self.batch_size = batch_size
         self.epochs = epochs
         self.rnn_units = rnn_units
+        self.train_time = 0
 
     def model_infor(self):
         infor = ''
         infor += 'embedding_matrix_path=' + str(self.settings.embedding_matrix_path) + '\n'
+        infor += 'train_time=' + str(self.train_time) + '\n'
         return infor
 
     def build(self):
@@ -94,8 +96,8 @@ class BLSTM():
         self.model.load_weights(self.result_path+best_model_name)
         test_metrics = self.model.evaluate(x_test, y_test)
         predict_log = print_metrics(test_metrics, self.model.metrics_names)
-        model_infor = self.model_infor()
-        save_to_file(self.result_path+'predict.log', model_infor+predict_log)
+        return predict_log
+
 
     def compile(self):
         self.model.compile(loss="binary_crossentropy", optimizer='adam',
@@ -114,6 +116,12 @@ class BLSTM():
         '''
         self.build()
         self.compile()
+        start_time = time.time()
         history = self.fit(x_train, y_train, x_val, y_val)
+        end_time = time.time()
+        self.train_time = end_time-start_time
         draw_history(history, self.result_path)
-        self.evaluate(x_test, y_test)
+        predict_log = self.evaluate(x_test, y_test)
+        model_infor = self.model_infor()
+        save_to_file(self.result_path + 'predict.log',
+                     model_infor + predict_log)
