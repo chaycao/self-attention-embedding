@@ -27,7 +27,7 @@ class SelfAttentiveEmbeddingModel():
     def __init__(self, input_shape, settings,
                  epochs=100, batch_size=256, rnn_units=100,
                  da=350, r=30, use_regularizer=True, patience=10,
-                 word_da=350, word_r=30, useWordvecAtt=False):
+                 word_da=350, word_r=30, useWordvecAtt=False, useSelfAtt=True):
         # 模型名称
         self.name = "Self-Attentive-Embedding"
         # 输入形状
@@ -63,6 +63,8 @@ class SelfAttentiveEmbeddingModel():
         self.word_r = word_r
         # 是否使用词向量自注意力
         self.useWordvecAtt = useWordvecAtt
+        # 是否使用自注意力
+        self.useSelfAtt = useSelfAtt
 
     def model_infor(self):
         infor = ''
@@ -101,12 +103,16 @@ class SelfAttentiveEmbeddingModel():
                             output_dim=embedding_matrix.shape[1],
                             mask_zero=True,
                             )(inputs)
-        H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
-                          merge_mode='concat')(wordvec)
-        A = SelfAttentiveEmbedding(da=self.da, r=self.r,
-                                   use_regularizer=self.use_regularizer)(H)
-        M = Batch_Dot(Y=H)(A)
-        M = Flatten()(M)
+        if self.useSelfAtt == True:
+            H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
+                              merge_mode='concat')(wordvec)
+            A = SelfAttentiveEmbedding(da=self.da, r=self.r,
+                                       use_regularizer=self.use_regularizer)(H)
+            M = Batch_Dot(Y=H)(A)
+            M = Flatten()(M)
+        else:
+            M = Bidirectional(LSTM(units=self.rnn_units, return_sequences=False),
+                              merge_mode='concat')(wordvec)
 
         if self.useWordvecAtt == True:
             # 词向量注意力
