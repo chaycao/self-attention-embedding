@@ -75,6 +75,7 @@ class SelfAttentiveEmbeddingModel():
         infor += 'r=' + str(self.r) + '\n'
         infor += 'use_regularizer=' + str(self.use_regularizer) + '\n'
         infor += 'use_WordvecAtt=' + str(self.useWordvecAtt) + '\n'
+        infor += 'use_SelfAtt=' + str(self.useSelfAtt) + '\n'
         return infor
 
     def model_checkpoint(self):
