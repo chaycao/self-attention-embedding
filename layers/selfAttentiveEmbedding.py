@@ -32,12 +32,12 @@ class SelfAttentiveEmbedding(Layer):
 
     def call(self, H):
         # A = softmax(Ws2*tanh(Ws1*H.T))
-        A = K.dot(H, tf.transpose(self.ws1)) # (?, 445, 250)
+        A = K.dot(H, tf.transpose(self.ws1)) # (?, maxlen, da)
         A = K.tanh(A)
-        A = K.dot(A, tf.transpose(self.ws2)) # (?, 445, 30)
-        A = tf.transpose(A, [0, 2, 1]) # (?, 30, 445)
+        A = K.dot(A, tf.transpose(self.ws2)) # (?, maxlen, r)
+        A = tf.transpose(A, [0, 2, 1]) # (?, r, maxlen)
         A = K.softmax(A)
         return A
 
     def compute_output_shape(self, input_shape):
-        return (None, self.r, input_shape[2])
+        return (None, self.r, input_shape[1])
