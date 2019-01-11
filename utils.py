@@ -24,14 +24,17 @@ def mkdir(path):
 
 def best_model_file(path):
     '''
-    获得最好模型的文件名
+    获得最好模型的文件名，并且把所有多余的模型删掉
     :param path:
     :return:
     '''
     files = os.listdir(path)
     files = [x for x in files if os.path.splitext(x)[1]=='.h5']
     files.sort()
-    return files[-1]
+    res = files[-1]
+    for file in files[:-1]:
+        os.remove(path+file)
+    return res
 
 def list_model(path):
     return os.listdir(path)
