@@ -27,7 +27,8 @@ class SelfAttentiveEmbeddingModel():
     def __init__(self, input_shape, settings,
                  epochs=100, batch_size=256, rnn_units=100,
                  da=350, r=30, use_regularizer=True, patience=10,
-                 word_da=350, word_r=30, useWordvecAtt=False, useSelfAtt=True):
+                 word_da=350, word_r=30, useWordvecAtt=False, useSelfAtt=True,
+                 embeddingDropout=0, blstmDropout=0):
         # 模型名称
         self.name = "Self-Attentive-Embedding"
         # 输入形状
@@ -63,11 +64,17 @@ class SelfAttentiveEmbeddingModel():
         self.word_r = word_r
         # 是否使用词向量自注意力
         self.useWordvecAtt = useWordvecAtt
-        # 是否使用自注意力
-        self.useSelfAtt = useSelfAtt
+        # 训练时间
+        self.train_time = 0
+        # embedding后用Dropout
+        self.embeddingDropout = embeddingDropout
+        # blstm后用Dropout
+        self.blstmDropout = blstmDropout
 
     def model_infor(self):
         infor = ''
+        infor += 'embedding_matrix_path=' + str(self.embedding_matrix_path) + '\n'
+        infor += 'train_time=' + str(self.train_time) + '\n'
         infor += 'epoch=' + str(self.epochs) + '\n'
         infor += 'batch_size=' + str(self.batch_size) + '\n'
         infor += 'rnn_units=' + str(self.rnn_units) + '\n'
@@ -75,7 +82,8 @@ class SelfAttentiveEmbeddingModel():
         infor += 'r=' + str(self.r) + '\n'
         infor += 'use_regularizer=' + str(self.use_regularizer) + '\n'
         infor += 'use_WordvecAtt=' + str(self.useWordvecAtt) + '\n'
-        infor += 'use_SelfAtt=' + str(self.useSelfAtt) + '\n'
+        infor += 'embeddingDropout=' + str(self.embeddingDropout) + '\n'
+        infor += 'blstmDropout=' + str(self.blstmDropout) + '\n'
         return infor
 
     def model_checkpoint(self):
@@ -104,16 +112,17 @@ class SelfAttentiveEmbeddingModel():
                             output_dim=embedding_matrix.shape[1],
                             mask_zero=True,
                             )(inputs)
-        if self.useSelfAtt == True:
-            H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
-                              merge_mode='concat')(wordvec)
-            A = SelfAttentiveEmbedding(da=self.da, r=self.r,
-                                       use_regularizer=self.use_regularizer)(H)
-            M = Batch_Dot(Y=H)(A)
-            M = Flatten()(M)
-        else:
-            M = Bidirectional(LSTM(units=self.rnn_units, return_sequences=False),
-                              merge_mode='concat')(wordvec)
+        if self.embeddingDropout != 0:
+            wordvec = Dropout(self.embeddingDropout)(wordvec)
+
+        H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
+                          merge_mode='concat')(wordvec)
+        if self.blstmDropout != 0:
+            H = Dropout(self.blstmDropout)(H)
+        A = SelfAttentiveEmbedding(da=self.da, r=self.r,
+                                   use_regularizer=self.use_regularizer)(H)
+        M = Batch_Dot(Y=H)(A)
+        M = Flatten()(M)
 
         if self.useWordvecAtt == True:
             # 词向量注意力
@@ -163,8 +172,8 @@ class SelfAttentiveEmbeddingModel():
         self.model.load_weights(self.result_path+best_model_name)
         test_metrics = self.model.evaluate(x_test, y_test)
         predict_log = print_metrics(test_metrics, self.model.metrics_names)
-        model_infor = self.model_infor()
-        save_to_file(self.result_path+'predict.log', model_infor+predict_log)
+        return predict_log
+
 
 
     def start(self, x_train, y_train, x_val, y_val, x_test, y_test):
@@ -180,9 +189,15 @@ class SelfAttentiveEmbeddingModel():
         '''
         self.build()
         self.compile()
+        start_time = time.time()
         history = self.fit(x_train, y_train, x_val, y_val)
+        end_time = time.time()
+        self.train_time = end_time - start_time
         draw_history(history, self.result_path)
-        self.evaluate(x_test, y_test)
+        predict_log = self.evaluate(x_test, y_test)
+        model_infor = self.model_infor()
+        save_to_file(self.result_path + 'predict.log',
+                     model_infor + predict_log)
 
     def evaluate_all(self, x_test, y_test, result_path):
         self.build()
@@ -205,3 +220,14 @@ class SelfAttentiveEmbeddingModel():
         test_metrics = self.model.evaluate(x_test, y_test)
         predict_log = print_metrics(test_metrics, self.model.metrics_names)
         print(predict_log + '\n\n')
+
+    def predict_single(self, x, model_path):
+        self.build()
+        self.compile()
+        self.model.load_weights(model_path)
+        model = self.model
+        y = model.predict(x)
+        print(y)
+        attention_layer = K.function([model.layers[0].input], [model.layers[3].output])
+        A = attention_layer([x])
+        print(A)
