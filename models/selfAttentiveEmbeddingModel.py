@@ -25,10 +25,9 @@ class SelfAttentiveEmbeddingModel():
     """
 
     def __init__(self, input_shape, settings,
-                 epochs=100, batch_size=256, rnn_units=100,
-                 da=350, r=30, use_regularizer=True, patience=10,
-                 word_da=350, word_r=30, useWordvecAtt=False, useSelfAtt=True,
-                 embeddingDropout=0, blstmDropout=0):
+                 epochs=100, batch_size=256, rnn_units=300,
+                 da=200, r=10, use_regularizer=0, patience=10,useWordvecAtt=False,
+                 embeddingDropout=0.2, outputDropout=0.2):
         # 模型名称
         self.name = "Self-Attentive-Embedding"
         # 输入形状
@@ -58,18 +57,14 @@ class SelfAttentiveEmbeddingModel():
         self.use_regularizer = use_regularizer
         # early_stopping的等待次数
         self.patience = patience
-        # 词向量自注意力的维度
-        self.word_da = word_da
-        # 词向量自注意力的行数
-        self.word_r = word_r
         # 是否使用词向量自注意力
         self.useWordvecAtt = useWordvecAtt
         # 训练时间
         self.train_time = 0
         # embedding后用Dropout
         self.embeddingDropout = embeddingDropout
-        # blstm后用Dropout
-        self.blstmDropout = blstmDropout
+        # output前用Dropout
+        self.outputDropout = outputDropout
 
     def model_infor(self):
         infor = ''
@@ -83,7 +78,7 @@ class SelfAttentiveEmbeddingModel():
         infor += 'use_regularizer=' + str(self.use_regularizer) + '\n'
         infor += 'use_WordvecAtt=' + str(self.useWordvecAtt) + '\n'
         infor += 'embeddingDropout=' + str(self.embeddingDropout) + '\n'
-        infor += 'blstmDropout=' + str(self.blstmDropout) + '\n'
+        infor += 'outputDropout=' + str(self.outputDropout) + '\n'
         return infor
 
     def model_checkpoint(self):
@@ -117,8 +112,6 @@ class SelfAttentiveEmbeddingModel():
 
         H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
                           merge_mode='concat')(wordvec)
-        if self.blstmDropout != 0:
-            H = Dropout(self.blstmDropout)(H)
         A = SelfAttentiveEmbedding(da=self.da, r=self.r,
                                    use_regularizer=self.use_regularizer)(H)
         M = Batch_Dot(Y=H)(A)
@@ -126,17 +119,23 @@ class SelfAttentiveEmbeddingModel():
 
         if self.useWordvecAtt == True:
             # 词向量注意力
-            A_wordvec = SelfAttentiveEmbedding(da=self.word_da, r=self.word_r,
+            A_wordvec = SelfAttentiveEmbedding(da=self.da, r=self.r,
                                        use_regularizer=self.use_regularizer)(wordvec)
             M_wordvec = Batch_Dot(Y=wordvec)(A_wordvec)
             M_wordvec = Flatten()(M_wordvec)
             # 联合词向量注意力和自注意力
             M = concatenate([M, M_wordvec])
 
+        if self.outputDropout != 0:
+            M = Dropout(self.outputDropout)(M)
+
+        if self.outputMLP != 0:
+            M = Dense(self.outputMLP, activation='relu')(M)
+
         predictions = Dense(1, activation='sigmoid')(M)
         self.model = Model(inputs=inputs, outputs=predictions)
         self.model.layers[1].set_weights([embedding_matrix])
-        self.model.layers[1].trainable = False
+        self.model.layers[1].trainable = True
         self.model.summary()
 
     def compile(self):
