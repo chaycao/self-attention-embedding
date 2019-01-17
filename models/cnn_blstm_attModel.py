@@ -1,9 +1,11 @@
 from keras import Input
 from keras.models import Sequential, load_model, Model
 from keras.layers import Dense, Bidirectional, GRU, Embedding, LSTM, Flatten, \
-    Lambda, Dropout, concatenate, Conv1D, MaxPooling1D, Masking
+    Lambda, Dropout, concatenate, Conv1D, MaxPooling1D, Masking, GlobalMaxPooling1D
 
 from draw import draw_history
+from layers.attention import Attention
+from layers.mul import Mul
 from metrics import recall, precision, f1
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 import time
@@ -16,9 +18,10 @@ from keras import backend as K
 
 class CnnBlstmAttModel():
     def __init__(self, input_shape, settings,
-                 epochs=100, batch_size=256, rnn_units=100,
-                 da=350, r=30, use_regularizer=True, patience=10,
-                 word_da=350, word_r=30, useWordvecAtt=False, useSelfAtt=True):
+                 epochs=100, batch_size=256, rnn_units=300,
+                 da=200, r=10, use_regularizer=True, patience=10,
+                 useWordvecAtt=False, useSelfAtt=True, dropout=0.2,
+                 filters=32, kernel_size=3, pool_size=2, useMLP=True):
         # 模型名称
         self.name = "CNN-BLSTM-Att"
         # 输入形状
@@ -48,14 +51,20 @@ class CnnBlstmAttModel():
         self.use_regularizer = use_regularizer
         # early_stopping的等待次数
         self.patience = patience
-        # 词向量自注意力的维度
-        self.word_da = word_da
-        # 词向量自注意力的行数
-        self.word_r = word_r
         # 是否使用词向量自注意力
         self.useWordvecAtt = useWordvecAtt
         # 是否使用自注意力
         self.useSelfAtt = useSelfAtt
+        # Dropout
+        self.dropout = dropout
+        # CNN的过滤器数量
+        self.filters = filters
+        # CNN的卷积核数量
+        self.kernel_size = kernel_size
+        # MaxPooling的大小
+        self.pool_size = pool_size
+
+        self.useMLP = useMLP
 
     def model_infor(self):
         infor = ''
@@ -64,9 +73,13 @@ class CnnBlstmAttModel():
         infor += 'rnn_units=' + str(self.rnn_units) + '\n'
         infor += 'da=' + str(self.da) + '\n'
         infor += 'r=' + str(self.r) + '\n'
+        infor += 'dropout=' + str(self.dropout) + '\n'
         infor += 'use_regularizer=' + str(self.use_regularizer) + '\n'
         infor += 'use_WordvecAtt=' + str(self.useWordvecAtt) + '\n'
         infor += 'use_SelfAtt=' + str(self.useSelfAtt) + '\n'
+        infor += 'filters=' + str(self.filters) + '\n'
+        infor += 'kernel_size=' + str(self.kernel_size) + '\n'
+        infor += 'pool_size=' + str(self.pool_size) + '\n'
         return infor
 
     def model_checkpoint(self):
@@ -94,33 +107,57 @@ class CnnBlstmAttModel():
         wordvec = Embedding(input_dim=embedding_matrix.shape[0],
                             output_dim=embedding_matrix.shape[1],
                             )(inputs)
-        convec = Conv1D(32, 5, activation='relu')(wordvec)
-        convec = MaxPooling1D(3)(convec)
-        convec = Conv1D(32, 5, activation='relu')(convec)
+        wordvec = Dropout(self.dropout)(wordvec)
         if self.useSelfAtt == True:
             H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
-                              merge_mode='concat')(convec)
+                              merge_mode='concat')(wordvec)
+            H = Dropout(self.dropout)(H)
+
             A = SelfAttentiveEmbedding(da=self.da, r=self.r,
                                        use_regularizer=self.use_regularizer)(H)
             M = Batch_Dot(Y=H)(A)
             M = Flatten()(M)
+
+            a = Attention(da=self.da)(H)
+            H = Mul(a)(H)
+            C = Conv1D(200, 2, activation='relu')(H)
+            C = MaxPooling1D(self.pool_size)(C)
+            C = Conv1D(200, 3, activation='relu')(C)
+            C = MaxPooling1D(self.pool_size)(C)
+            C = Conv1D(200, 4, activation='relu')(C)
+            C = GlobalMaxPooling1D()(C)
+
+            M = concatenate([M, C])
+
         else:
-            M = Bidirectional(LSTM(units=self.rnn_units, return_sequences=False),
-                              merge_mode='concat')(convec)
+            H = Bidirectional(LSTM(units=self.rnn_units, return_sequences=True),
+                              merge_mode='concat')(wordvec)
+            H = Dropout(self.dropout)(H)
+            a = Attention(da=self.da)(H)
+            H = Mul(a)(H)
+            C = Conv1D(200, 2, activation='relu')(H)
+            C = MaxPooling1D(self.pool_size)(C)
+            C = Conv1D(200, 3, activation='relu')(C)
+            C = MaxPooling1D(self.pool_size)(C)
+            C = Conv1D(200, 4, activation='relu')(C)
+            C = GlobalMaxPooling1D()(C)
+            M = C
 
         if self.useWordvecAtt == True:
             # 词向量注意力
-            A_wordvec = SelfAttentiveEmbedding(da=self.word_da, r=self.word_r,
+            A_wordvec = SelfAttentiveEmbedding(da=self.da, r=self.r,
                                                use_regularizer=self.use_regularizer)(wordvec)
             M_wordvec = Batch_Dot(Y=wordvec)(A_wordvec)
             M_wordvec = Flatten()(M_wordvec)
             # 联合词向量注意力和自注意力
             M = concatenate([M, M_wordvec])
-
+        if self.useMLP == True:
+            M = Dense(500, activation='relu')(M)
+            M = Dropout(self.dropout)(M)
         predictions = Dense(1, activation='sigmoid')(M)
         self.model = Model(inputs=inputs, outputs=predictions)
         self.model.layers[1].set_weights([embedding_matrix])
-        self.model.layers[1].trainable = False
+        self.model.layers[1].trainable = True
         self.model.summary()
 
     def compile(self):
