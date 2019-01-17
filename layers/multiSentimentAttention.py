@@ -1,7 +1,6 @@
 from keras import backend as K
 from keras.engine.topology import Layer
 import tensorflow as tf
-from regularizers import self_attentive_reg
 import numpy as np
 
 class MultiSentimentAttention(Layer):
@@ -12,7 +11,7 @@ class MultiSentimentAttention(Layer):
         self.r = r
         self.d = d
         self.supports_masking = True
-        self.activity_regularizer = self_attentive_reg
+        # self.activity_regularizer = self_attentive_reg
         super(MultiSentimentAttention, self).__init__(**kwargs)
 
     def compute_mask(self, input, input_mask=None):
