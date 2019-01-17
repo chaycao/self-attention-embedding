@@ -129,9 +129,6 @@ class SelfAttentiveEmbeddingModel():
         if self.outputDropout != 0:
             M = Dropout(self.outputDropout)(M)
 
-        if self.outputMLP != 0:
-            M = Dense(self.outputMLP, activation='relu')(M)
-
         predictions = Dense(1, activation='sigmoid')(M)
         self.model = Model(inputs=inputs, outputs=predictions)
         self.model.layers[1].set_weights([embedding_matrix])
