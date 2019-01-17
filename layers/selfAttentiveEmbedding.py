@@ -1,18 +1,24 @@
 from keras import backend as K
 from keras.engine.topology import Layer
 import tensorflow as tf
-from regularizers import self_attentive_reg
+from regularizers import self_attentive_reg_2, self_attentive_reg_3, self_attentive_reg_4, self_attentive_reg_5
 import numpy as np
 
 class SelfAttentiveEmbedding(Layer):
 
-    def __init__(self, da, r, use_regularizer = True, **kwargs):
+    def __init__(self, da, r, use_regularizer = 0, **kwargs):
         self.da = da
         self.r = r
         self.A = None
         self.supports_masking = True
-        if use_regularizer == True:
-            self.activity_regularizer = self_attentive_reg
+        if use_regularizer == 2:
+            self.activity_regularizer = self_attentive_reg_2
+        elif use_regularizer == 3:
+            self.activity_regularizer = self_attentive_reg_3
+        elif use_regularizer == 4:
+            self.activity_regularizer = self_attentive_reg_4
+        elif use_regularizer == 5:
+            self.activity_regularizer = self_attentive_reg_5
         super(SelfAttentiveEmbedding, self).__init__(**kwargs)
 
     def compute_mask(self, input, input_mask=None):
